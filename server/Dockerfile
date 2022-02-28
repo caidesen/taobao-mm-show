@@ -15,7 +15,7 @@ FROM alpine:3.15.0 AS scratch
 WORKDIR /app
 
 COPY --from=builder ./build/apiserver /app
-COPY ./public/ /app
+COPY ./public /app/public
 COPY ./.env /app
 EXPOSE 3000
 

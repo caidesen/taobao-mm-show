@@ -1,11 +1,11 @@
 name: image-build
 
 on:
-#  # 每当 push 到 main 分支时触发部署
-#  push:
-#    tags:
-#      - '*'
-#      # 手动触发部署
+  # 每当 push 到 main 分支时触发部署
+  push:
+    tags:
+      - '*'
+      # 手动触发部署
   workflow_dispatch:
 
 
@@ -15,45 +15,44 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install pnpm
-          uses: pnpm/action-setup@v2.0.1
-          with:
-            version: 6.15.1
+        uses: pnpm/action-setup@v2.2.1
+        with:
+          version: 6.15.1
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
       - name: Set node version to 16
-          uses: actions/setup-node@v2
-          with:
-            node-version: 16
-            cache: 'pnpm'
-      - run: |
-        cd website
-        pnpm install
-        pnpm run build
-  build-image:
-    runs-on: ubuntu-latest
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
-        - name: Set up QEMU
-          uses: docker/setup-qemu-action@v1
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v1
-        - name: Login to DockerHub
-          uses: docker/login-action@v1
-          with:
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_TOKEN }}
-        - name: Extract metadata for Docker
-          id: meta
-          uses: docker/metadata-action@v3
-          with:
-            images: asen001/tbmm
-        - name: Push
-          uses: docker/build-push-action@v2
-          with:
-            context: ./server
-            file: ./server/Dockerfile # Dockerfile 位置
-            target: production
-            builder: ${{ steps.buildx.outputs.name }}
-            platforms: linux/amd64
-            push: true
-            tags: ${{ steps.meta.outputs.tags }}
-            labels: ${{ steps.meta.outputs.labels }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          cache: 'pnpm'
+          cache-dependency-path: website/pnpm-lock.yaml
+      - name: pnpm install
+        run: |
+          cd website
+          pnpm install
+      - name: website build
+        run: |
+          cd website
+          pnpm run build
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: asen001/tbmm
+      - name: Push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./server
+          file: ./server/Dockerfile # Dockerfile 位置
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
