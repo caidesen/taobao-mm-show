@@ -6,15 +6,24 @@ import {getNextPicture} from "../../service/app-service";
 const $q = useQuasar();
 const current = ref<MmPicture>();
 const picList: MmPicture[]= [];
+const loadMore = async () => {
+  $q.loadingBar.start();
+  try {
+    const res = await getNextPicture();
+    picList.push(...res)
+    res.forEach(it => {
+      const image = new Image();
+      image.src = it.url
+    })
+  } finally {
+    $q.loadingBar.stop();
+  }
+}
 const onNext = async () => {
   if (!picList.length) {
-    $q.loadingBar.start();
-    try {
-      const res  = await getNextPicture();
-      picList.push(...res)
-    } finally {
-      $q.loadingBar.stop();
-    }
+    await loadMore()
+  } else if (picList.length === 1) {
+    loadMore()
   }
   current.value = picList.pop();
 };

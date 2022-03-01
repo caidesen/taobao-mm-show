@@ -7,6 +7,15 @@ import (
 	"os/signal"
 )
 
+var serverUrl string
+
+func init() {
+	serverUrl = os.Getenv("SERVER_URL")
+	if serverUrl == "" {
+		serverUrl = "0.0.0.0:3000"
+	}
+}
+
 // StartServerWithGracefulShutdown function for starting server with a graceful shutdown.
 func StartServerWithGracefulShutdown(a *fiber.App) {
 	// Create channel for idle connections.
@@ -27,7 +36,7 @@ func StartServerWithGracefulShutdown(a *fiber.App) {
 	}()
 
 	// Run server.
-	if err := a.Listen(os.Getenv("SERVER_URL")); err != nil {
+	if err := a.Listen(serverUrl); err != nil {
 		log.Printf("Oops... Server is not running! Reason: %v", err)
 	}
 
@@ -37,7 +46,7 @@ func StartServerWithGracefulShutdown(a *fiber.App) {
 // StartServer func for starting a simple server.
 func StartServer(a *fiber.App) {
 	// Run server.
-	if err := a.Listen(os.Getenv("SERVER_URL")); err != nil {
+	if err := a.Listen(serverUrl); err != nil {
 		log.Printf("Oops... Server is not running! Reason: %v", err)
 	}
 }

@@ -16,7 +16,6 @@ WORKDIR /app
 
 COPY --from=builder ./build/apiserver /app
 COPY ./public /app/public
-COPY ./.env /app
 EXPOSE 3000
 
 ENTRYPOINT ["/app/apiserver"]

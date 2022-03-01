@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
-	_ "github.com/joho/godotenv/autoload"
 	"tbmm/pkg/configs"
 	"tbmm/pkg/middleware"
 	"tbmm/pkg/routes"
