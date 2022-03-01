@@ -19,9 +19,15 @@ const loadMore = async () => {
     $q.loadingBar.stop();
   }
 }
+const loading = ref(false)
 const onNext = async () => {
   if (!picList.length) {
-    await loadMore()
+    loading.value = true
+    try {
+      await loadMore()
+    } finally {
+      loading.value = false
+    }
   } else if (picList.length === 1) {
     loadMore()
   }
@@ -33,14 +39,14 @@ setTimeout(() => {
 </script>
 <template>
   <div>
-    <q-img :src="current?.url" style="width: 100%; height: 100%">
+    <q-img :src="current?.url" style="width: 100%; height: 100%" @error="onNext">
       <div v-if="current?.text" class="absolute-bottom text-subtitle1 text-center">
         {{ current?.text }}
       </div>
     </q-img>
   </div>
   <q-page-sticky position="bottom-right" :offset="[18, 18]">
-    <q-btn push fab icon="done_outline" @click="onNext" class="bg-info" color="#fff" />
+    <q-btn push fab icon="done_outline" :loading="loading" @click="onNext" class="bg-info" color="#fff" />
   </q-page-sticky>
 </template>
 
