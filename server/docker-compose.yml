@@ -1,0 +1,9 @@
+services:
+  tbmm-server:
+    image: asen001/tbmm
+    ports:
+      - 3002:3000
+    environment:
+      - REDIS_ADDR=redis:6379
+  redis:
+    image: redis:alpine
