@@ -2,6 +2,7 @@ package service
 
 import (
 	"log"
+	"math"
 	"math/rand"
 	"tbmm/app/store"
 	"tbmm/pkg/utils"
@@ -34,31 +35,42 @@ func GetOneMMPicInCycle() (picRes *utils.PicRes) {
 	return res
 }
 
-func loadTbMMPicList() {
+func loadTbMMPicList(t *time.Ticker) {
 	num, _ := store.GetPicSurplusNum()
 	if num < 100 {
 		log.Printf("缓存数量不足，当前：%d", num)
-		resChannel := make(chan *utils.PicRes)
-		for i := 0; i < 5; i++ {
-			go func() {
-				resChannel <- GetOneMMPicInCycle()
-			}()
-		}
-		for i := 0; i < 5; i++ {
-			_, err := store.InsertPic(<-resChannel)
-			if err != nil {
-				log.Printf("插入出错%v", err)
+		t.Stop()
+		cycleNum := int(math.Ceil(float64(100-int(num)) / 5))
+		for r := 0; r < cycleNum; r++ {
+			resChannel := make(chan *utils.PicRes, 5)
+			for i := 0; i < 5; i++ {
+				go func() {
+					resChannel <- GetOneMMPicInCycle()
+				}()
+			}
+			for i := 0; i < 5; i++ {
+				_, err := store.InsertPic(<-resChannel)
+				if err != nil {
+					log.Printf("插入出错%v", err)
+				}
 			}
 		}
-		loadTbMMPicList()
-	} else {
-		time.Sleep(1 * time.Second)
-		loadTbMMPicList()
+		num, _ := store.GetPicSurplusNum()
+		log.Printf("补充完成，当前缓存数量：%d", num)
+		t.Reset(time.Second * 2)
 	}
 }
 
 func init() {
-	go loadTbMMPicList()
+	t := time.NewTicker(time.Second * 2)
+	go func() {
+		for {
+			select {
+			case <-t.C:
+				loadTbMMPicList(t)
+			}
+		}
+	}()
 }
 func GetTbMMPicList(len int) []*utils.PicRes {
 	resList := make([]*utils.PicRes, len, len)
@@ -73,7 +85,6 @@ func GetTbMMPicList(len int) []*utils.PicRes {
 					resChannel <- GetOneMMPicInCycle()
 				} else {
 					resChannel <- onePic
-					log.Printf("消费缓存内容%v", onePic)
 				}
 			}()
 		}
