@@ -1,5 +1,5 @@
 services:
-  tbmm-server:
+  server:
     image: asen001/tbmm
     ports:
       - 3002:3000
